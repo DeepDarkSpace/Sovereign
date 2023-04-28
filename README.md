@@ -53,8 +53,8 @@ Before the game starts, each AI must place its ships on the board. To do this, t
 
 ## Sovereign AI
 
-It's simple baseline of AI targeted for early learners of C# it divides the Enemy Ocean in a Checkered Board to maximize hit potential
-It is supossed to sparc interested and kickstart ideas to improve an AI in the tournament.
+It's simple baseline of AI targeted for early learners of C# it divides the Enemy Ocean in a Checkered Board to maximize hit potential.
+Sovereign project should sparc interest and kickstart ideas to improve an AI for the tournament.
 
 Try to read and understand it first before you do the funni.
 
