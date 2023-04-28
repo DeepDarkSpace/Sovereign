@@ -115,7 +115,7 @@ namespace Sovereign
                 else if (!hit && Mode == TargetingMode.ByChance)
                 {
                     //Debug.WriteLine( "Miss!" );
-                    FillDistressCoordinates(ShotCoordinates);
+                    FillDistressCoordinates(ShotCoordinates); //We add all surrounding Coordinates of a miss to less likely Corrdinates
                     this._alreadyTriedCoordinates.Add(ShotCoordinates);
                     return;
                 }
