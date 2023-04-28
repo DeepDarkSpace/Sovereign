@@ -1,6 +1,6 @@
 # Sovereign a Battleships SDK AI-Project
 
-# BATTLESHIPS SDK NOT included contact me if interested
+BATTLESHIPS SDK NOT included contact me if interested
 
 # Battleship
 
