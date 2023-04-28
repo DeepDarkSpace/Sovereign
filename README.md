@@ -24,7 +24,7 @@ The AIs that are not needed can be removed from the Players folder, otherwise th
 
 ## Battle SDK
 
-The BattleSDK consists of 3 simple classes that allow integration into the Battleship system. BattleshipKI, Direction and Ship
+The BattleSDK consists of 3 simple classes that allow integration into the Battleship system. BattleshipAI, Direction and Ship
 
 ## Direction
 
@@ -40,7 +40,7 @@ Lastly, each ship also has a list of Hits. Each hit represents a hit from the en
 
 ## BattleshipAI
 
-This abstract class is used by the participant. The participant creates exactly one class that inherits from BattleshipKI.
+This abstract class is used by the participant. The participant creates exactly one class that inherits from BattleshipAI.
 
 `public BattleshipAI(int size);`
 
