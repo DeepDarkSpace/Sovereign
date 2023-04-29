@@ -102,7 +102,7 @@ namespace Sovereign
                     shot = this._thanix.ShootByChance();
                     break;
 
-                case Models.TargetingMode.Deliberately:
+                case Models.TargetingMode.Aimed:
                     shot = this._thanix.ShootDeliberately();
                     break;
 

@@ -1,6 +1,7 @@
 ﻿using Sovereign.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Sovereign
@@ -25,7 +26,7 @@ namespace Sovereign
         private List<Coordinates> _alreadyTriedCoordinates;
         private List<Coordinates> _checkBoardOcean;
         private List<Coordinates> _removedShipCoordinates;
-        private List<Coordinates> _shipCoordinates;
+        private List<Coordinates> _enemyShipCoordinates;
         private List<Coordinates> _hitCoordinates;
         private int _oceanSize;
         private int _hitCounter;
@@ -42,7 +43,7 @@ namespace Sovereign
             this._oceanSize = size;
             ShipLengths = new List<int>();
             this._alreadyTriedCoordinates = new List<Coordinates>();
-            this._shipCoordinates = new List<Coordinates>();
+            this._enemyShipCoordinates = new List<Coordinates>();
             this._removedShipCoordinates = new List<Coordinates>();
             this._hitCoordinates = new List<Coordinates>();
             this._distressCoordinates = new List<Coordinates>();
@@ -59,70 +60,79 @@ namespace Sovereign
         {
             try
             {
-                if (hit && deadly && Mode == TargetingMode.Deliberately)
+                switch (this.Mode)
                 {
-                    //Debug.WriteLine( "deadly!" );
-                    this._hitCounter = this._hitCounter + 1;
-                    this._hitCoordinates.Add(ShotCoordinates);
-                    this._alreadyTriedCoordinates.Add(ShotCoordinates);
-                    ShipLengths.Remove(this._hitCounter);
-                    this._shipCoordinates.Clear();
-                    this._removedShipCoordinates.Clear();
-                    Mode = TargetingMode.ByChance;
-                    this._hitCounter = 0;
-                    return;
-                }
-                else if (hit && !deadly && Mode == TargetingMode.ByChance)
-                {
-                    //Debug.WriteLine( "Hit by Chance" );
-                    this._hitCounter = this._hitCounter + 1;
-                    this._lastHit = this._lastShot;
-                    this._initialHit = ShotCoordinates;
-                    this._alreadyTriedCoordinates.Add(ShotCoordinates);
-                    this._hitCoordinates.Add(ShotCoordinates); ;
-                    GetShipCoordinates();
-                    this._shipCoordinates.RemoveAll(r => r.Equals(this._lastShot));
-                    MonitorTargetingMode();
-                    return;
-                }
-                else if (hit && Mode == TargetingMode.Deliberately && !deadly && this._shipCoordinates.Count > 0)
-                {
-                    //Debug.WriteLine( "Hit by Mode" );
-                    this._hitCounter = _hitCounter + 1;
-                    this._lastHit = this._lastShot;
-                    this._alreadyTriedCoordinates.Add(ShotCoordinates);
-                    this._hitCoordinates.Add(ShotCoordinates);
-                    this._shipCoordinates.RemoveAll(r => r.Equals(this._lastShot));
-                    MonitorTargetingMode();
-                    return;
-                }
-                else if (!hit && Mode == TargetingMode.Deliberately && this._shipCoordinates.Count == 0)
-                {
-                    //Debug.WriteLine( "Miss! Going back to By Chance Mode" );
-                    this._alreadyTriedCoordinates.Add(ShotCoordinates);
-                    this._shipCoordinates.Clear();
-                    MonitorTargetingMode();
-                    return;
-                }
-                else if (!hit && Mode == TargetingMode.Deliberately && this._shipCoordinates.Count > 0)
-                {
-                    //Debug.WriteLine( "Miss! Trying other Ship Coordinates" );
-                    this._alreadyTriedCoordinates.Add(ShotCoordinates);
-                    this._shipCoordinates.RemoveAll(r => r.Equals(this._lastShot));
-                    MonitorTargetingMode();
-                    return;
-                }
-                else if (!hit && Mode == TargetingMode.ByChance)
-                {
-                    //Debug.WriteLine( "Miss!" );
-                    FillDistressCoordinates(ShotCoordinates); //We add all surrounding Coordinates of a miss to less likely Corrdinates
-                    this._alreadyTriedCoordinates.Add(ShotCoordinates);
-                    return;
-                }
-                else if (Mode == TargetingMode.ByChance && deadly)
-                {
-                    //Debug.WriteLine( "How bah dah?" );
-                    return;
+                    case TargetingMode.ByChance:
+                        if (hit && !deadly)
+                        {
+                            Debug.WriteLine("Hit by Chance");
+                            this._hitCounter = this._hitCounter + 1;
+                            this._lastHit = this._lastShot;
+                            this._initialHit = ShotCoordinates;
+                            this._alreadyTriedCoordinates.Add(ShotCoordinates);
+                            this._hitCoordinates.Add(ShotCoordinates); ;
+                            GetShipCoordinates();
+                            this._enemyShipCoordinates.RemoveAll(r => r.Equals(this._lastShot));
+                            MonitorTargetingMode();
+                            return;
+                        }
+                        else if (!hit)
+                        {
+                            Debug.WriteLine("Miss!");
+                            FillDistressCoordinates(ShotCoordinates);
+                            this._alreadyTriedCoordinates.Add(ShotCoordinates);
+                            return;
+                        }
+                        else if (Mode == TargetingMode.ByChance && deadly)
+                        {
+                            Debug.WriteLine("How bah dah?");
+                            return;
+                        }
+                        break;
+                    case TargetingMode.Aimed:
+                        if (hit && deadly)
+                        {
+                            Debug.WriteLine("deadly!");
+                            this._hitCounter = this._hitCounter + 1;
+                            this._hitCoordinates.Add(ShotCoordinates);
+                            this._alreadyTriedCoordinates.Add(ShotCoordinates);
+                            ShipLengths.Remove(this._hitCounter);
+                            this._enemyShipCoordinates.Clear();
+                            this._removedShipCoordinates.Clear();
+                            Mode = TargetingMode.ByChance;
+                            this._hitCounter = 0;
+                            return;
+                        }
+                        else if (hit && !deadly && this._enemyShipCoordinates.Count > 0)
+                        {
+                            Debug.WriteLine("Hit by Mode");
+                            this._hitCounter = _hitCounter + 1;
+                            this._lastHit = this._lastShot;
+                            this._alreadyTriedCoordinates.Add(ShotCoordinates);
+                            this._hitCoordinates.Add(ShotCoordinates);
+                            this._enemyShipCoordinates.RemoveAll(r => r.Equals(this._lastShot));
+                            MonitorTargetingMode();
+                            return;
+                        }
+                        else if (!hit && Mode == TargetingMode.Aimed && this._enemyShipCoordinates.Count == 0)
+                        {
+                            Debug.WriteLine("Miss! Going back to By Chance Mode");
+                            this._alreadyTriedCoordinates.Add(ShotCoordinates);
+                            this._enemyShipCoordinates.Clear();
+                            MonitorTargetingMode();
+                            return;
+                        }
+                        else if (!hit && Mode == TargetingMode.Aimed && this._enemyShipCoordinates.Count > 0)
+                        {
+                            Debug.WriteLine("Miss! Trying other Ship Coordinates");
+                            this._alreadyTriedCoordinates.Add(ShotCoordinates);
+                            this._enemyShipCoordinates.RemoveAll(r => r.PointOfAim == this._lastShot.PointOfAim);
+                            MonitorTargetingMode();
+                            return;
+                        }
+                        break;
+                    default:
+                        return;
                 }
             }
             catch (Exception)
@@ -195,13 +205,13 @@ namespace Sovereign
             try
             {
                 Coordinates shot;
-                if (this._shipCoordinates.Count == 0)
+                if (this._enemyShipCoordinates.Count == 0)
                 {
                     // Debug.WriteLine( "Ship coordinates missing" );
                 }
 
                 List<Coordinates> mostLikelyShotCoordinates = new List<Coordinates>();
-                mostLikelyShotCoordinates = this._shipCoordinates.Where(w => (w.X == this._lastHit.X + 1 && w.Y == this._lastHit.Y)
+                mostLikelyShotCoordinates = this._enemyShipCoordinates.Where(w => (w.X == this._lastHit.X + 1 && w.Y == this._lastHit.Y)
                                                                                        || (w.X == this._lastHit.X - 1 && w.Y == this._lastHit.Y)
                                                                                        || (w.Y == this._lastHit.Y + 1 && w.X == this._lastHit.X)
                                                                                        || (w.Y == this._lastHit.Y - 1 && w.X == this._lastHit.X)).ToList();
@@ -212,7 +222,7 @@ namespace Sovereign
                     this._initialHit.PointOfAim = this._lastHit.PointOfAim;
                     this._lastHit = this._initialHit;
                     RemoveRedundantHeadings();
-                    mostLikelyShotCoordinates = this._shipCoordinates.Where(w => (w.X == this._initialHit.X + 1 && w.Y == this._lastHit.Y)
+                    mostLikelyShotCoordinates = this._enemyShipCoordinates.Where(w => (w.X == this._initialHit.X + 1 && w.Y == this._lastHit.Y)
                                                                                           || (w.X == this._initialHit.X - 1 && w.Y == this._initialHit.Y)
                                                                                           || (w.Y == this._initialHit.Y + 1 && w.X == this._initialHit.X)
                                                                                           || (w.Y == this._initialHit.Y - 1 && w.X == this._initialHit.X)).ToList();
@@ -220,7 +230,7 @@ namespace Sovereign
                     if (mostLikelyShotCoordinates.Count == 0)
                     {
                         //Debug.WriteLine( "Random Shot" );
-                        this._shipCoordinates.Clear();
+                        this._enemyShipCoordinates.Clear();
                         Mode = TargetingMode.ByChance;
                         shot = ShootByChance();
                         this._lastShot = shot;
@@ -308,7 +318,7 @@ namespace Sovereign
         // Monitors if the Targeting Mode has to be forced to change
         private void MonitorTargetingMode()
         {
-            if (this._shipCoordinates.Count == 0 && Mode == TargetingMode.Deliberately)
+            if (this._enemyShipCoordinates.Count == 0 && Mode == TargetingMode.Aimed)
             {
                 //if ( this._removedShipCoordinates.Count != 0 )
                 //{
@@ -318,13 +328,13 @@ namespace Sovereign
                 //else
                 //{
                 //   Debug.WriteLine( "Monitor forces By Chance Mode" );
-                this._shipCoordinates.Clear();
+                this._enemyShipCoordinates.Clear();
                 Mode = TargetingMode.ByChance;
                 //}
             }
             else
             {
-                Mode = TargetingMode.Deliberately;
+                Mode = TargetingMode.Aimed;
             }
         }
 
@@ -337,7 +347,7 @@ namespace Sovereign
             Coordinates shotDownwards;
             int maxShipLength;
 
-            if (Mode == TargetingMode.Deliberately)
+            if (Mode == TargetingMode.Aimed)
                 RemoveRedundantHeadings();
 
             maxShipLength = ShipLengths.Max();
@@ -352,7 +362,7 @@ namespace Sovereign
                    && !this._alreadyTriedCoordinates.Any(a => a.Equals(shotUpwards))
                    && !this._hitCoordinates.Any(a => a.Equals(shotUpwards)))
                 {
-                    this._shipCoordinates.Add(shotUpwards);
+                    this._enemyShipCoordinates.Add(shotUpwards);
                 }
             }
 
@@ -366,7 +376,7 @@ namespace Sovereign
                     && !this._alreadyTriedCoordinates.Any(a => a.Equals(shotDownwards))
                     && !this._hitCoordinates.Any(a => a.Equals(shotDownwards)))
                 {
-                    this._shipCoordinates.Add(shotDownwards);
+                    this._enemyShipCoordinates.Add(shotDownwards);
                 }
             }
 
@@ -380,7 +390,7 @@ namespace Sovereign
                     && !this._alreadyTriedCoordinates.Any(a => a.Equals(shotLeftwards))
                     && !this._hitCoordinates.Any(a => a.Equals(shotLeftwards)))
                 {
-                    this._shipCoordinates.Add(shotLeftwards);
+                    this._enemyShipCoordinates.Add(shotLeftwards);
                 }
             }
 
@@ -394,7 +404,7 @@ namespace Sovereign
                     && !this._alreadyTriedCoordinates.Any(a => a.Equals(shotRightwards))
                     && !this._hitCoordinates.Any(a => a.Equals(shotRightwards)))
                 {
-                    this._shipCoordinates.Add(shotRightwards);
+                    this._enemyShipCoordinates.Add(shotRightwards);
                 }
             }
         }
@@ -405,14 +415,14 @@ namespace Sovereign
             //Vertical Shot hit
             if (this._lastHit.PointOfAim == Heading.Up || this._lastHit.PointOfAim == Heading.Down)
             {
-                this._removedShipCoordinates.AddRange(this._shipCoordinates.Where(w => w.PointOfAim == Heading.Left || w.PointOfAim == Heading.Right).ToList());
-                this._shipCoordinates.RemoveAll(r => r.PointOfAim == Heading.Left || r.PointOfAim == Heading.Right);
+                this._removedShipCoordinates.AddRange(this._enemyShipCoordinates.Where(w => w.PointOfAim == Heading.Left || w.PointOfAim == Heading.Right).ToList());
+                this._enemyShipCoordinates.RemoveAll(r => r.PointOfAim == Heading.Left || r.PointOfAim == Heading.Right);
             }
             //Horizontal Shot hit
             if (this._lastHit.PointOfAim == Heading.Left || this._lastHit.PointOfAim == Heading.Right)
             {
-                this._removedShipCoordinates.AddRange(this._shipCoordinates.Where(w => w.PointOfAim == Heading.Up || w.PointOfAim == Heading.Down).ToList());
-                this._shipCoordinates.RemoveAll(r => r.PointOfAim == Heading.Up || r.PointOfAim == Heading.Down);
+                this._removedShipCoordinates.AddRange(this._enemyShipCoordinates.Where(w => w.PointOfAim == Heading.Up || w.PointOfAim == Heading.Down).ToList());
+                this._enemyShipCoordinates.RemoveAll(r => r.PointOfAim == Heading.Up || r.PointOfAim == Heading.Down);
             }
         }
 

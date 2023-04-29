@@ -3,6 +3,6 @@
     public enum TargetingMode
     {
         ByChance,
-        Deliberately
+        Aimed
     }
 }
