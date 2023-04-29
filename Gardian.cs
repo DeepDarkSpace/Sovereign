@@ -242,6 +242,7 @@ namespace Sovereign
                     }
                 }
                 return FireShotOnCoordinates(coordinatesNextToLastShot);
+            }
             catch (Exception)
             {
                 throw;
