@@ -56,7 +56,7 @@ namespace Sovereign
         /// <param name="ShotCoordinates"> Coordinates that were returned by the AI mainframe</param>
         /// <param name="hit">bool that indicates wether this was a hit or a miss</param>
         /// <param name="deadly">bool that indicates wether this shot was deadly to the ship</param>
-        public void ShotManager(Coordinates ShotCoordinates, bool hit, bool deadly)
+        public void FireControl(Coordinates ShotCoordinates, bool hit, bool deadly)
         {
             try
             {
@@ -200,7 +200,7 @@ namespace Sovereign
         /// Shoot Method that uses the Coordinates that the AI saved as possible Coordinates of the Ship that got hit
         /// </summary>
         /// <returns>Coordinates of the shot that got chosen by the AI</returns>
-        public Coordinates ShootDeliberately()
+        public Coordinates FireAimedShot()
         {
             try
             {
@@ -210,24 +210,28 @@ namespace Sovereign
                     // Debug.WriteLine( "Ship coordinates missing" );
                 }
 
-                List<Coordinates> mostLikelyShotCoordinates = new List<Coordinates>();
-                mostLikelyShotCoordinates = this._enemyShipCoordinates.Where(w => (w.X == this._lastHit.X + 1 && w.Y == this._lastHit.Y)
+                List<Coordinates> coordinatesNextToLastShot = new List<Coordinates>();
+                coordinatesNextToLastShot = this._enemyShipCoordinates.Where(w => (w.X == this._lastHit.X + 1 && w.Y == this._lastHit.Y)
                                                                                        || (w.X == this._lastHit.X - 1 && w.Y == this._lastHit.Y)
                                                                                        || (w.Y == this._lastHit.Y + 1 && w.X == this._lastHit.X)
                                                                                        || (w.Y == this._lastHit.Y - 1 && w.X == this._lastHit.X)).ToList();
                 int index;
-                if (mostLikelyShotCoordinates.Count == 0)
+                if (!coordinatesNextToLastShot.Any())
                 {
-                    //Debug.WriteLine( "Using inital Shot" );
+                    Debug.WriteLine("Using inital Shot");
                     this._initialHit.PointOfAim = this._lastHit.PointOfAim;
                     this._lastHit = this._initialHit;
                     RemoveRedundantHeadings();
-                    mostLikelyShotCoordinates = this._enemyShipCoordinates.Where(w => (w.X == this._initialHit.X + 1 && w.Y == this._lastHit.Y)
+                    List<Coordinates> coordinatesNextToInitialHit = this._enemyShipCoordinates.Where(w => (w.X == this._initialHit.X + 1 && w.Y == this._initialHit.Y)
                                                                                           || (w.X == this._initialHit.X - 1 && w.Y == this._initialHit.Y)
                                                                                           || (w.Y == this._initialHit.Y + 1 && w.X == this._initialHit.X)
                                                                                           || (w.Y == this._initialHit.Y - 1 && w.X == this._initialHit.X)).ToList();
 
-                    if (mostLikelyShotCoordinates.Count == 0)
+                    if (coordinatesNextToInitialHit.Any())
+                    {
+                        return FireShotOnCoordinates(coordinatesNextToInitialHit);
+                    }
+                    else
                     {
                         //Debug.WriteLine( "Random Shot" );
                         this._enemyShipCoordinates.Clear();
@@ -237,11 +241,7 @@ namespace Sovereign
                         return shot;
                     }
                 }
-                index = this._rnd.Next(0, mostLikelyShotCoordinates.Count());
-                shot = mostLikelyShotCoordinates.ElementAt(index);
-                this._lastShot = shot;
-                return shot;
-            }
+                return FireShotOnCoordinates(coordinatesNextToLastShot);
             catch (Exception)
             {
                 throw;
@@ -283,6 +283,18 @@ namespace Sovereign
             {
                 throw;
             }
+        }
+        /// <summary>
+        /// Determins the next Shot base on Random determination
+        /// </summary>
+        /// <param name="shot">Coordinates of possible shots</param>
+        /// <returns> the Coordinate of the Shot</returns
+        private Coordinates FireShotOnCoordinates(List<Coordinates> coordinatesNextToLastShot)
+        {
+            int index = this._rnd.Next(0, coordinatesNextToLastShot.Count());
+            Coordinates shot = coordinatesNextToLastShot.ElementAt(index);
+            this._lastShot = shot;
+            return shot;
         }
 
         /// <summary>
