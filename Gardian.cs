@@ -114,7 +114,7 @@ namespace Sovereign
                             MonitorTargetingMode();
                             return;
                         }
-                        else if (!hit && Mode == TargetingMode.Aimed && this._enemyShipCoordinates.Count == 0)
+                        else if (!hit && this._enemyShipCoordinates.Count == 0)
                         {
                             Debug.WriteLine("Miss! Going back to By Chance Mode");
                             this._alreadyTriedCoordinates.Add(ShotCoordinates);
@@ -122,7 +122,7 @@ namespace Sovereign
                             MonitorTargetingMode();
                             return;
                         }
-                        else if (!hit && Mode == TargetingMode.Aimed && this._enemyShipCoordinates.Count > 0)
+                        else if (!hit && this._enemyShipCoordinates.Count > 0)
                         {
                             Debug.WriteLine("Miss! Trying other Ship Coordinates");
                             this._alreadyTriedCoordinates.Add(ShotCoordinates);
