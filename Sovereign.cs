@@ -72,7 +72,6 @@ namespace Sovereign
                                 break;
                         }
                     } while (CanSetShip(ship) == false);
-                    ship.Dir = GetDirection();
                     ShipsAlreadyPlaced.Add(ship);
                 }
             }
